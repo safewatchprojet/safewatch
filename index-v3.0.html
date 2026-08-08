@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SafeWatch v3.0</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#07111f;
+    color:white;
+    min-height:100vh;
+}
+
+nav{
+    height:70px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 7%;
+    border-bottom:1px solid #20364d;
+    background:#081522;
+}
+
+.logo{
+    font-size:25px;
+    font-weight:bold;
+}
+
+.logo span{
+    color:#00e5ff;
+}
+
+nav a{
+    color:#b9c7d6;
+    text-decoration:none;
+    margin-left:25px;
+}
+
+nav a:hover{
+    color:#00e5ff;
+}
+
+.hero{
+    text-align:center;
+    padding:60px 20px 30px;
+}
+
+.shield{
+    font-size:65px;
+}
+
+.hero h1{
+    font-size:46px;
+    margin:15px 0;
+}
+
+.hero h1 span{
+    color:#00e5ff;
+}
+
+.hero p{
+    max-width:720px;
+    margin:auto;
+    color:#a9b7c7;
+    line-height:1.6;
+    font-size:17px;
+}
+
+.scanner{
+    width:92%;
+    max-width:850px;
+    margin:35px auto;
+    padding:30px;
+    background:#0d1b2a;
+    border:1px solid #20364d;
+    border-radius:20px;
+}
+
+.scanner h2{
+    text-align:center;
+    margin-bottom:22px;
+}
+
+.input-area{
+    display:flex;
+    gap:10px;
+}
+
+input{
+    flex:1;
+    padding:16px;
+    border:1px solid #29445d;
+    border-radius:10px;
+    background:#07111f;
+    color:white;
+    outline:none;
+    font-size:16px;
+}
+
+input:focus{
+    border-color:#00e5ff;
+}
+
+button{
+    border:none;
+    border-radius:10px;
+    padding:15px 24px;
+    background:#00e5ff;
+    color:#001018;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:.85;
+}
+
+.result{
+    display:none;
+    margin-top:25px;
+}
+
+.card{
+    background:#07111f;
+    border:1px solid #20364d;
+    border-radius:16px;
+    padding:25px;
+    margin-top:15px;
+}
+
+.safe{
+    border-color:#35d06f;
+}
+
+.suspicious{
+    border-color:#f4c542;
+}
+
+.danger{
+    border-color:#ff4d4d;
+}
+
+.result-title{
+    font-size:28px;
+    font-weight:bold;
+}
+
+.score{
+    font-size:45px;
+    font-weight:bold;
+    margin:12px 0;
+}
+
+.green{
+    color:#35d06f;
+}
+
+.yellow{
+    color:#ffd34d;
+}
+
+.red{
+    color:#ff5c5c;
+}
+
+.details{
+    text-align:left;
+    margin-top:20px;
+}
+
+.details h3{
+    color:#00e5ff;
+    margin-bottom:10px;
+}
+
+.details p,
+.details li{
+    color:#b9c7d6;
+    line-height:1.7;
+}
+
+.details ul{
+    padding-left:20px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+}
+
+.info-box{
+    background:#0d1b2a;
+    border:1px solid #20364d;
+    border-radius:12px;
+    padding:15px;
+}
+
+.info-box strong{
+    display:block;
+    color:#00e5ff;
+    margin-bottom:7px;
+}
+
+.warning{
+    margin-top:18px;
+    padding:15px;
+    border-radius:10px;
+    background:#351313;
+    border:1px solid #ff4d4d;
+    color:#ffd0d0;
+}
+
+.features{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+    padding:40px 7%;
+}
+
+.feature{
+    width:270px;
+    background:#0d1b2a;
+    border:1px solid #20364d;
+    border-radius:16px;
+    padding:25px;
+    text-align:center;
+}
+
+.feature-icon{
+    font-size:40px;
+    margin-bottom:12px;
+}
+
+.feature p{
+    color:#a9b7c7;
+    margin-top:10px;
+    line-height:1.5;
+}
+
+footer{
+    text-align:center;
+    padding:30px;
+    border-top:1px solid #20364d;
+    color:#718196;
+    margin-top:30px;
+}
+
+.loading{
+    text-align:center;
+    padding:25px;
+    color:#00e5ff;
+}
+
+@media(max-width:650px){
+
+    nav{
+        padding:0 5%;
+    }
+
+    nav div:last-child{
+        display:none;
+    }
+
+    .hero h1{
+        font-size:34px;
+    }
+
+    .input-area{
+        flex-direction:column;
+    }
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .scanner{
+        padding:20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+    <div class="logo">🛡️ Safe<span>Watch</span></div>
+
+    <div>
+        <a href="#">Home</a>
+        <a href="#scanner">Scanner</a>
+        <a href="#about">About</a>
+    </div>
+</nav>
+
+<section class="hero">
+
+    <div class="shield">🛡️</div>
+
+    <h1>
+        Browse <span>Safer.</span> Stay Protected.
+    </h1>
+
+    <p>
+        SafeWatch analyzes website URLs, domain information,
+        DNS records and threat reputation to help identify
+        potentially dangerous websites.
+    </p>
+
+</section>
+
+<section class="scanner" id="scanner">
+
+    <h2>🔍 Website Security Scanner</h2>
+
+    <div class="input-area">
+
+        <input
+            id="urlInput"
+            type="text"
+            placeholder="https://example.com"
+        >
+
+        <button onclick="scanURL()">
+            SCAN WEBSITE
+        </button>
+
+    </div>
+
+    <div id="result" class="result"></div>
+
+</section>
+
+<section class="features">
+
+    <div class="feature">
+        <div class="feature-icon">🔎</div>
+        <h3>URL Analysis</h3>
+        <p>
+            Detect suspicious URL patterns,
+            risky keywords and unusual structures.
+        </p>
+    </div>
+
+    <div class="feature">
+        <div class="feature-icon">🌐</div>
+        <h3>Domain Intelligence</h3>
+        <p>
+            View IP addresses and DNS information
+            associated with the domain.
+        </p>
+    </div>
+
+    <div class="feature">
+        <div class="feature-icon">🛡️</div>
+        <h3>Threat Detection</h3>
+        <p>
+            Check URLs against Google Safe Browsing
+            threat reputation.
+        </p>
+    </div>
+
+</section>
+
+<section id="about" style="text-align:center;padding:40px 20px;">
+
+    <h2>🛡️ About SafeWatch</h2>
+
+    <p style="max-width:700px;margin:15px auto;color:#a9b7c7;line-height:1.6;">
+        SafeWatch is a learning-focused website security
+        scanner designed to help users understand potential
+        risks before interacting with unknown URLs.
+    </p>
+
+</section>
+
+<footer>
+    © 2026 SafeWatch v3.0
+    <br><br>
+    Stay Smart. Stay Safe. 🛡️
+</footer>
+
+<script>
+
+async function scanURL(){
+
+    const input =
+        document.getElementById("urlInput").value.trim();
+
+    const result =
+        document.getElementById("result");
+
+    if(!input){
+
+        result.style.display="block";
+        result.className="result suspicious";
+
+        result.innerHTML=`
+            <div class="card suspicious">
+                <div class="result-title yellow">
+                    ⚠️ Enter a Website URL
+                </div>
+
+                <p style="margin-top:10px;color:#b9c7d6;">
+                    Please enter a URL before scanning.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+    result.style.display="block";
+    result.className="result";
+
+    result.innerHTML=`
+        <div class="card">
+            <div class="loading">
+                🔍 Checking URL...<br><br>
+                Analyzing domain, DNS and threat reputation.
+            </div>
+        </div>
+    `;
+
+    try{
+
+        const response =
+            await fetch(
+                "http://localhost:3000/scan",
+                {
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+
+                    body:JSON.stringify({
+                        url:input
+                    })
+                }
+            );
+
+        if(!response.ok){
+            throw new Error("Backend returned an error");
+        }
+
+        const data =
+            await response.json();
+
+        showReport(data);
+
+    }catch(error){
+
+        result.innerHTML=`
+            <div class="card danger">
+
+                <div class="result-title red">
+                    ❌ CONNECTION ERROR
+                </div>
+
+                <p style="margin-top:15px;color:#b9c7d6;">
+                    SafeWatch could not connect to the backend.
+                </p>
+
+                <br>
+
+                <p style="color:#a9b7c7;">
+                    Make sure this is running:
+                </p>
+
+                <br>
+
+                <strong>
+                    node server-v3.0.js
+                </strong>
+
+            </div>
+        `;
+
+        console.error(error);
+    }
+}
+
+
+function showReport(data){
+
+    const result =
+        document.getElementById("result");
+
+    let riskClass="safe";
+    let riskColor="green";
+    let icon="🟢";
+
+    if(data.risk==="SUSPICIOUS"){
+        riskClass="suspicious";
+        riskColor="yellow";
+        icon="⚠️";
+    }
+
+    if(data.risk==="HIGH RISK"){
+        riskClass="danger";
+        riskColor="red";
+        icon="🚨";
+    }
+
+    const domain =
+        data.domainInformation || {};
+
+    const ips =
+        domain.ipAddresses || {};
+
+    const dns =
+        domain.dns || {};
+
+    const reputation =
+        data.googleSafeBrowsing || {};
+
+    const analysis =
+        data.detailedThreatAnalysis || {};
+
+    const reasons =
+        data.urlAnalysis?.reasons || [];
+
+    result.className="result";
+
+    result.innerHTML=`
+
+        <div class="card ${riskClass}">
+
+            <div class="result-title ${riskColor}">
+                ${icon} ${escapeHTML(data.risk)}
+            </div>
+
+            <div class="score">
+                ${escapeHTML(data.score)}/100
+            </div>
+
+            <p style="color:#b9c7d6;">
+                ${escapeHTML(
+                    data.risk==="HIGH RISK"
+                    ? "Potentially dangerous patterns were detected."
+                    : data.risk==="SUSPICIOUS"
+                    ? "Some suspicious patterns were detected."
+                    : "No high-risk pattern was detected."
+                )}
+            </p>
+
+        </div>
+
+        <div class="card">
+
+            <h2>📊 Detailed Security Report</h2>
+
+            <div class="details">
+
+                <h3>🛡️ Overall Security Assessment</h3>
+
+                <div class="grid">
+
+                    <div class="info-box">
+                        <strong>URL</strong>
+                        ${escapeHTML(data.scannedURL)}
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Risk</strong>
+                        ${escapeHTML(data.risk)}
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Risk Score</strong>
+                        ${escapeHTML(data.score)}/100
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Scan Time</strong>
+                        ${new Date(data.scanTime).toLocaleString()}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="details">
+
+                <h3>🌐 Domain Information</h3>
+
+                <div class="grid">
+
+                    <div class="info-box">
+                        <strong>Hostname</strong>
+                        ${escapeHTML(domain.hostname || "N/A")}
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Protocol</strong>
+                        ${escapeHTML(domain.protocol || "N/A")}
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Port</strong>
+                        ${escapeHTML(domain.port || "N/A")}
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Path</strong>
+                        ${escapeHTML(domain.pathname || "/")}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="details">
+
+                <h3>📡 IP Information</h3>
+
+                <p>
+                    <strong>IPv4:</strong><br>
+                    ${
+                        ips.ipv4?.length
+                        ? ips.ipv4.map(escapeHTML).join("<br>")
+                        : "None found"
+                    }
+                </p>
+
+                <br>
+
+                <p>
+                    <strong>IPv6:</strong><br>
+                    ${
+                        ips.ipv6?.length
+                        ? ips.ipv6.map(escapeHTML).join("<br>")
+                        : "None found"
+                    }
+                </p>
+
+            </div>
+
+            <div class="details">
+
+                <h3>🔗 DNS Information</h3>
+
+                <p>
+                    <strong>Name Servers:</strong><br>
+                    ${
+                        dns.nameservers?.length
+                        ? dns.nameservers.map(escapeHTML).join("<br>")
+                        : "None found"
+                    }
+                </p>
+
+                <br>
+
+                <p>
+                    <strong>Mail Servers:</strong><br>
+                    ${
+                        dns.mailServers?.length
+                        ? dns.mailServers
+                            .map(x =>
+                                escapeHTML(
+                                    "Priority: "+x.priority+
+                                    " | "+x.exchange
+                                )
+                            )
+                            .join("<br>")
+                        : "None found"
+                    }
+                </p>
+
+                <br>
+
+                <p>
+                    <strong>TXT Records:</strong><br>
+                    ${
+                        dns.txtRecords?.length
+                        ? dns.txtRecords
+                            .flat()
+                            .map(escapeHTML)
+                            .join("<br>")
+                        : "None found"
+                    }
+                </p>
+
+            </div>
+
+            <div class="details">
+
+                <h3>🔎 URL Threat Analysis</h3>
+
+                <p>
+                    <strong>Analysis Risk:</strong>
+                    ${escapeHTML(data.urlAnalysis?.risk || "N/A")}
+                </p>
+
+                <p>
+                    <strong>Analysis Score:</strong>
+                    ${escapeHTML(data.urlAnalysis?.score || 0)}/100
+                </p>
+
+                <br>
+
+                <p><strong>Detection Reasons:</strong></p>
+
+                <ul>
+                    ${
+                        reasons.length
+                        ? reasons.map(
+                            r => `<li>${escapeHTML(r)}</li>`
+                        ).join("")
+                        : "<li>No detection details available.</li>"
+                    }
+                </ul>
+
+            </div>
+
+            <div class="details">
+
+                <h3>🛡️ Google Safe Browsing</h3>
+
+                <p>
+                    <strong>Status:</strong>
+                    ${escapeHTML(reputation.status || "UNKNOWN")}
+                </p>
+
+                ${
+                    reputation.status==="THREAT_FOUND"
+                    ? `
+                        <div class="warning">
+                            🚨 Google Safe Browsing detected
+                            a known threat.
+                        </div>
+                    `
+                    : `
+                        <p style="margin-top:10px;">
+                            No known threat was reported.
+                        </p>
+                    `
+                }
+
+            </div>
+
+            <div class="details">
+
+                <h3>🔬 Detailed Threat Analysis</h3>
+
+                <p>
+                    <strong>Threat Level:</strong>
+                    ${escapeHTML(analysis.threatLevel || "UNKNOWN")}
+                </p>
+
+                <p>
+                    <strong>Total Checks:</strong>
+                    ${escapeHTML(analysis.totalChecks || 0)}
+                </p>
+
+                <br>
+
+                <ul>
+                    ${
+                        analysis.checks?.length
+                        ? analysis.checks.map(
+                            check => `
+                                <li>
+                                    <strong>
+                                        ${escapeHTML(check.name)}
+                                    </strong>
+                                    :
+                                    ${escapeHTML(check.status)}
+                                </li>
+                            `
+                        ).join("")
+                        : "<li>No detailed checks available.</li>"
+                    }
+                </ul>
+
+            </div>
+
+            <div class="details">
+
+                <h3>📋 Security Summary</h3>
+
+                <ul>
+
+                    <li>
+                        HTTPS:
+                        ${
+                            data.securitySummary?.https
+                            ? "✅ Enabled"
+                            : "⚠️ Not enabled"
+                        }
+                    </li>
+
+                    <li>
+                        IP Address Detected:
+                        ${
+                            data.securitySummary?.ipAddressDetected
+                            ? "ℹ️ Yes"
+                            : "❌ No"
+                        }
+                    </li>
+
+                    <li>
+                        Known Threat:
+                        ${
+                            data.securitySummary?.knownThreat
+                            ? "🚨 Yes"
+                            : "✅ No"
+                        }
+                    </li>
+
+                    <li>
+                        Overall Risk:
+                        ${escapeHTML(data.risk)}
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+function escapeHTML(value){
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+
+document
+    .getElementById("urlInput")
+    .addEventListener(
+        "keydown",
+        function(event){
+
+            if(event.key==="Enter"){
+                scanURL();
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+</html>
