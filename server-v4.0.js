@@ -112,7 +112,9 @@ function analyzeURL(input) {
         }
     });
 
-    /* SUSPICIOUS STREAMING / DOWNLOAD PATTERNS */
+    /* =========================================
+       UNOFFICIAL STREAMING / DOWNLOAD PATTERNS
+    ========================================= */
 
     const suspiciousContentWords = [
         "movie-download",
@@ -140,50 +142,24 @@ function analyzeURL(input) {
         }
     });
 
+    /*
+       One indicator = SUSPICIOUS minimum.
+       Multiple indicators = higher warning.
+       This is a heuristic, not proof of malware.
+    */
+
     if (suspiciousContentCount >= 2) {
-        score += 20;
+        score += 40;
 
         reasons.push(
             "Multiple unofficial streaming/download-related URL patterns detected"
         );
+
     } else if (suspiciousContentCount === 1) {
-        score += 10;
+        score += 30;
 
         reasons.push(
-            "Streaming/download-related URL pattern detected"
-        );
-    }
-
-    /* ADDITIONAL STREAMING INDICATORS */
-
-    const additionalStreamingPatterns = [
-        "movie",
-        "movies",
-        "film",
-        "films",
-        "webseries",
-        "web-series",
-        "tv-series",
-        "bollywood",
-        "hollywood",
-        "tamil-movies",
-        "telugu-movies",
-        "hindi-movies"
-    ];
-
-    let additionalStreamingCount = 0;
-
-    additionalStreamingPatterns.forEach(function (word) {
-        if (lowerInput.includes(word)) {
-            additionalStreamingCount++;
-        }
-    });
-
-    if (additionalStreamingCount >= 2) {
-        score += 10;
-
-        reasons.push(
-            "Multiple entertainment/streaming-related URL indicators detected"
+            "Unofficial streaming/download-related URL pattern detected"
         );
     }
 
@@ -262,11 +238,17 @@ function analyzeURL(input) {
         );
     }
 
+    /* LIMIT SCORE */
+
     if (score > 100) {
         score = 100;
     }
 
+    /* REMOVE DUPLICATE REASONS */
+
     reasons = [...new Set(reasons)];
+
+    /* RISK LEVEL */
 
     let risk;
 
@@ -307,10 +289,12 @@ async function getDomainInformation(url) {
             protocol: null,
             port: null,
             pathname: null,
+
             ipAddresses: {
                 ipv4: [],
                 ipv6: []
             },
+
             dns: {
                 nameservers: [],
                 mailServers: [],
@@ -349,16 +333,24 @@ async function getDomainInformation(url) {
 
     return {
         status: "SUCCESS",
+
         hostname,
+
         protocol: parsedURL.protocol,
+
         port: parsedURL.port || "Default",
+
         pathname: parsedURL.pathname,
+
         search: parsedURL.search || "",
+
         hash: parsedURL.hash || "",
+
         ipAddresses: {
             ipv4,
             ipv6
         },
+
         dns: {
             nameservers: ns,
             mailServers: mx,
@@ -388,43 +380,47 @@ async function checkSafeBrowsing(url) {
             "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=" +
             encodeURIComponent(API_KEY);
 
-        const response = await fetch(apiURL, {
-            method: "POST",
+        const response = await fetch(
+            apiURL,
+            {
+                method: "POST",
 
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                client: {
-                    clientId: "safewatch",
-                    clientVersion: "4.0"
+                headers: {
+                    "Content-Type":
+                        "application/json"
                 },
 
-                threatInfo: {
-                    threatTypes: [
-                        "MALWARE",
-                        "SOCIAL_ENGINEERING",
-                        "UNWANTED_SOFTWARE",
-                        "POTENTIALLY_HARMFUL_APPLICATION"
-                    ],
+                body: JSON.stringify({
+                    client: {
+                        clientId: "safewatch",
+                        clientVersion: "4.0"
+                    },
 
-                    platformTypes: [
-                        "ANY_PLATFORM"
-                    ],
+                    threatInfo: {
+                        threatTypes: [
+                            "MALWARE",
+                            "SOCIAL_ENGINEERING",
+                            "UNWANTED_SOFTWARE",
+                            "POTENTIALLY_HARMFUL_APPLICATION"
+                        ],
 
-                    threatEntryTypes: [
-                        "URL"
-                    ],
+                        platformTypes: [
+                            "ANY_PLATFORM"
+                        ],
 
-                    threatEntries: [
-                        {
-                            url
-                        }
-                    ]
-                }
-            })
-        });
+                        threatEntryTypes: [
+                            "URL"
+                        ],
+
+                        threatEntries: [
+                            {
+                                url
+                            }
+                        ]
+                    }
+                })
+            }
+        );
 
         if (!response.ok) {
             return {
@@ -441,7 +437,8 @@ async function checkSafeBrowsing(url) {
                 .toLowerCase()
                 .includes("application/json")
         ) {
-            const data = await response.json();
+            const data =
+                await response.json();
 
             if (
                 data.matches &&
@@ -476,6 +473,7 @@ async function checkSafeBrowsing(url) {
         return {
             status: "API_ERROR"
         };
+
     } catch (error) {
         return {
             status: "API_ERROR",
@@ -486,7 +484,7 @@ async function checkSafeBrowsing(url) {
 }
 
 /* =========================================
-   V4 PROTECTION ENGINE
+   PROTECTION ENGINE
 ========================================= */
 
 function createProtectionDecision(
@@ -502,15 +500,11 @@ function createProtectionDecision(
         action = "BLOCK";
         protectionLevel = "CRITICAL";
 
-    } else if (
-        localResult.score >= 60
-    ) {
+    } else if (localResult.score >= 60) {
         action = "BLOCK";
         protectionLevel = "HIGH";
 
-    } else if (
-        localResult.score >= 30
-    ) {
+    } else if (localResult.score >= 30) {
         action = "WARN";
         protectionLevel = "MEDIUM";
     }
@@ -518,9 +512,15 @@ function createProtectionDecision(
     return {
         action,
         protectionLevel,
-        blocked: action === "BLOCK",
-        warning: action === "WARN",
-        safe: action === "ALLOW"
+
+        blocked:
+            action === "BLOCK",
+
+        warning:
+            action === "WARN",
+
+        safe:
+            action === "ALLOW"
     };
 }
 
@@ -528,87 +528,130 @@ function createProtectionDecision(
    SCAN ENDPOINT
 ========================================= */
 
-app.post("/scan", async function (req, res) {
-    const input =
-        (req.body.url || "").trim();
+app.post(
+    "/scan",
+    async function (req, res) {
 
-    if (!input) {
-        return res.status(400).json({
-            error: "URL is required"
-        });
+        const input =
+            (req.body.url || "")
+                .trim();
+
+        if (!input) {
+            return res.status(400).json({
+                error: "URL is required"
+            });
+        }
+
+        const localResult =
+            analyzeURL(input);
+
+        const domainInfo =
+            await getDomainInformation(input);
+
+        const reputation =
+            await checkSafeBrowsing(input);
+
+        if (
+            reputation.status ===
+            "THREAT_FOUND"
+        ) {
+            localResult.score = 100;
+
+            localResult.risk =
+                "HIGH RISK";
+
+            localResult.reasons.push(
+                "Google Safe Browsing detected a known threat"
+            );
+
+            reputation.matches.forEach(
+                function (match) {
+                    localResult.reasons.push(
+                        "Threat type: " +
+                        match.threatType
+                    );
+                }
+            );
+        }
+
+        localResult.reasons =
+            [...new Set(localResult.reasons)];
+
+        const protection =
+            createProtectionDecision(
+                localResult,
+                reputation
+            );
+
+        const report = {
+            version: "4.0",
+
+            scannedURL: input,
+
+            scanTime:
+                new Date().toISOString(),
+
+            risk:
+                localResult.risk,
+
+            score:
+                localResult.score,
+
+            protection,
+
+            domainInformation:
+                domainInfo,
+
+            urlAnalysis: {
+                score:
+                    localResult.score,
+
+                risk:
+                    localResult.risk,
+
+                reasons:
+                    localResult.reasons
+            },
+
+            googleSafeBrowsing:
+                reputation,
+
+            /* ADDED FOR FRONTEND SECURITY SUMMARY */
+
+            securitySummary: {
+                https:
+                    domainInfo.protocol ===
+                    "https:",
+
+                ipAddressDetected:
+                    /^\d{1,3}(\.\d{1,3}){3}$/
+                    .test(
+                        domainInfo.hostname || ""
+                    ),
+
+                knownThreat:
+                    reputation.status ===
+                    "THREAT_FOUND",
+
+                overallRisk:
+                    localResult.risk
+            },
+
+            securityRecommendations: [
+                "Do not enter passwords on suspicious websites",
+                "Do not enter OTP or banking information",
+                "Do not download unknown files",
+                "Verify the domain name before continuing",
+                "Keep browser security protection enabled"
+            ]
+        };
+
+        res.json(report);
     }
-
-    const localResult =
-        analyzeURL(input);
-
-    const domainInfo =
-        await getDomainInformation(input);
-
-    const reputation =
-        await checkSafeBrowsing(input);
-
-    if (
-        reputation.status === "THREAT_FOUND"
-    ) {
-        localResult.score = 100;
-        localResult.risk = "HIGH RISK";
-
-        localResult.reasons.push(
-            "Google Safe Browsing detected a known threat"
-        );
-
-        reputation.matches.forEach(
-            function (match) {
-                localResult.reasons.push(
-                    "Threat type: " +
-                    match.threatType
-                );
-            }
-        );
-    }
-
-    localResult.reasons = [
-        ...new Set(localResult.reasons)
-    ];
-
-    const protection =
-        createProtectionDecision(
-            localResult,
-            reputation
-        );
-
-    const report = {
-        version: "4.0",
-        scannedURL: input,
-        scanTime: new Date().toISOString(),
-        risk: localResult.risk,
-        score: localResult.score,
-        protection,
-
-        domainInformation: domainInfo,
-
-        urlAnalysis: {
-            score: localResult.score,
-            risk: localResult.risk,
-            reasons: localResult.reasons
-        },
-
-        googleSafeBrowsing: reputation,
-
-        securityRecommendations: [
-            "Do not enter passwords on suspicious websites",
-            "Do not enter OTP or banking information",
-            "Do not download unknown files",
-            "Verify the domain name before continuing",
-            "Keep browser security protection enabled"
-        ]
-    };
-
-    res.json(report);
-});
+);
 
 /* =========================================
-   BLOCK PAGE DATA
+   PROTECTION STATUS
 ========================================= */
 
 app.get(
@@ -616,7 +659,9 @@ app.get(
     function (req, res) {
         res.json({
             product: "SafeWatch",
+
             version: "4.0",
+
             protection: "ACTIVE",
 
             description:
@@ -638,12 +683,15 @@ app.get(
 app.post(
     "/domain-report",
     async function (req, res) {
+
         const input =
-            (req.body.url || "").trim();
+            (req.body.url || "")
+                .trim();
 
         if (!input) {
             return res.status(400).json({
-                error: "URL is required"
+                error:
+                    "URL is required"
             });
         }
 
@@ -652,8 +700,10 @@ app.post(
 
         res.json({
             scannedURL: input,
+
             scanTime:
                 new Date().toISOString(),
+
             domainInformation:
                 domainInfo
         });
@@ -673,11 +723,13 @@ app.get(
 
             version: "4.0",
 
-            protection: "ACTIVE",
+            protection:
+                "ACTIVE",
 
             apiStatus:
                 API_KEY &&
-                API_KEY !== "PASTE_YOUR_KEY_HERE"
+                API_KEY !==
+                "PASTE_YOUR_KEY_HERE"
                     ? "CONFIGURED"
                     : "NOT CONFIGURED",
 
@@ -697,9 +749,12 @@ app.get(
 const PORT =
     process.env.PORT || 3000;
 
-app.listen(PORT, function () {
-    console.log(
-        "SafeWatch v4.0 running at http://localhost:" +
-        PORT
-    );
-});
+app.listen(
+    PORT,
+    function () {
+        console.log(
+            "SafeWatch v4.0 running at http://localhost:" +
+            PORT
+        );
+    }
+);
